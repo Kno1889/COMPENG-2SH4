@@ -1,0 +1,181 @@
+package Question.One;
+
+public class Matrix{
+    private int[][]  matrixData;	// integer array to store integer data
+    private int    rowsNum;	// number of rows
+    private int    colsNum;	// number of columns
+
+    public Matrix( int row, int col ) //constructor1
+    {
+		/* constructs a row-by-col matrix with all elements equal to 0;
+		if row<=0 then the number of rows of the matrix is set to 3;
+		likewise, if col<=0 the number of columns of the matrix is set to 3. */
+        if (row <= 0) {
+            rowsNum = 3;
+        } else {
+            rowsNum = row;
+        }
+        if (col <= 0) {
+            colsNum = 3;
+        } else {
+            colsNum = col;
+        }
+
+        matrixData = new int[rowsNum][colsNum];
+    }
+    //end first constructor
+
+
+    public Matrix( int[][] table) // constructor2
+    {
+		/* constructs a matrix out of the two dimensional array table,
+		   with the same number of rows, columns, and the same element in each
+		 position as array table. */
+
+        rowsNum = table.length;
+        colsNum = table[0].length;
+        matrixData = new int[rowsNum][colsNum]; // allocates memory for the 2D array
+        //loop to fill the array with values:
+        for (int i=0; i < rowsNum; i++)
+            for(int j=0; j < colsNum; j++)
+                matrixData[i][j] = table[i][j];
+
+    }//end second constructor
+
+    public int nuRows(){ // Returns the number of rows of this matrix
+        return rowsNum;
+    }
+
+    public int nuCols(){ // Returns the number of columns of this matrix
+        return colsNum;
+    }
+
+    public int getElement(int i, int j) throws IndexOutOfBoundsException
+    {
+		/* if i and j are valid indices of this matrix,
+		   then the element on row i and column j of this matrix
+		   is returned; otherwise it throws an exception with message "Invalid indexes".*/
+
+        if  ((i >= 0 && i < rowsNum) && (j >= 0 && j < colsNum)) { /* valid index means greater than or equal to zero AND less than rowsNum or colsNum return the required element*/
+            return matrixData[i][j];
+        }
+        else {
+            throw new IndexOutOfBoundsException("Invalid indexes.");
+        }
+
+    }//end getElement
+
+    public boolean setElement(int  x, int i, int j)
+    {
+        /* if i and j are valid indexes of this matrix, then the element on  row i and
+        column j of this matrix is assigned the value  x and true is returned;
+        otherwise false is returned and no change in the matrix is performed */
+        if  ((i >= 0 && i < rowsNum) && (j >= 0 && j < colsNum)) {
+            matrixData[i][j] = x;
+            return true;
+        }
+        else{
+            return false;
+        }
+    }//end setElement
+
+    public Matrix copy()
+    { /* returns a deep copy of this Matrix */
+        return new Matrix(matrixData);
+    }//end copy
+
+    public void addTo( Matrix m ) throws ArithmeticException
+    {
+		/*adds Matrix m to this Matrix; it throws an exception message "Invalid operation"
+		  if the matrix addition is not defined*/
+
+        if ((m.nuRows() == this.nuRows()) && (m.nuCols() == this.nuCols())) {
+            for(int i = 0; i < rowsNum; i++) {
+                for (int j = 0; j < colsNum; j++) {
+                    matrixData[i][j] += m.getElement(i, j);
+                }
+            }
+        }
+        else {
+            throw new ArithmeticException("Invalid operation");
+        }
+    }
+
+    public Matrix subMatrix(int i, int j) throws ArithmeticException
+    {
+    /*  returns a new Matrix object, which represents a submatrix of this Matrix,
+    	formed out of rows 0 through i and columns 0 through j;
+    	 the method should first check if values i and j are within the required range,
+    	 and throw an exception if any of them is not. The exception detail message should read: "Submatrix not defined".
+    	 Note: The new object should be constructed in such a way that changes in the new matrix do not affect
+    	    this Matrix. */
+        if ((i > 0 && i < rowsNum) && (j > 0 && j < colsNum)){
+            int submatX = i+1;
+            int submatY = j+1;
+            Matrix subMat = new Matrix(submatX,submatY);
+
+            for(int m = 0; m <= i; m++){
+                for (int n = 0; n <= j; n++){
+                    subMat.setElement(this.getElement(m,n),m,n);
+                }
+            }
+            return subMat;
+        }
+        else{
+            throw new ArithmeticException("Submatrix not defined");
+        }
+    }
+
+    public boolean isUpperTr(){
+    /*  This function checks if the function is upper triangular and returns true if it is, false if it's not.
+      The condition is that all elements below the main diagonal (top left to bottom right) are 0.
+      There are two different ways to check for this: when (number of rows is greater than or equal to the number of columns)
+       and when the number of rows is less than the number of columns
+     */
+    /*
+    the diagonal values are (0,0), (1,1), (2,2), etc. => the nested loop checks the
+    values below the diagonal values
+     */
+       for(int i = 1; i < rowsNum; i++){
+           for(int j = 0; j < i; j++){
+                if(matrixData[i][j] != 0){
+                    return false;
+               }
+           }
+        }
+    return true;
+    }
+
+    public static Matrix sum(Matrix[] matArray) throws ArithmeticException{ //summation function
+        int tempRowCount = matArray[0].nuRows(); // the first matrix element in the matrix array is used as reference
+        int tempColCount = matArray[0].nuCols();
+        int len = matArray.length;
+        for(int i = 0; i < len; i++){ // exception for if either of the dimensions don't match
+            if (tempRowCount != matArray[i].nuRows() || tempColCount != matArray[i].nuCols()){
+                throw new ArithmeticException ("Matrices do not have the same dimension!");
+            }
+        }
+        Matrix sumMat = new Matrix(tempRowCount, tempColCount); // creates a new matrix with appropriate dimensions to store the summed values
+        for (int i = 0; i < len; i++){ // adds to the sum matrix every corresponding element of every member of the matrix array by calling the addTo() method
+            sumMat.addTo(matArray[i]);
+        }
+        return sumMat;
+    }
+
+    public String toString(  )
+    {
+		/* returns a string representing the matrix,
+		   with each row on a line, and the elements in each row being separated by 2 blank spaces. */
+
+        String output = new String(); // creates an empty string
+        for(int i = 0; i < rowsNum; i++){
+            for(int j = 0; j < colsNum; j++){
+                output += matrixData[i][j] + "  ";
+            }
+            output += "\n";
+        }
+        return output;
+
+    }//end toString
+
+}//end class

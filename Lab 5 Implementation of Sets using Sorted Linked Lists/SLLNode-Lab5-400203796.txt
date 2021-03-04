@@ -1,0 +1,10 @@
+package Lab.Five;
+// behaves like a "pointer". In C terms, SLLNode objects store the value value of the current object and the "address" of the next element
+public class SLLNode {
+    int value;
+    SLLNode next;
+    public SLLNode(int i, SLLNode n){ //
+        value = i;
+        next = n;
+    }
+}

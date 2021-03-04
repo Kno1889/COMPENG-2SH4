@@ -1,0 +1,25 @@
+#include <stdio.h>
+char *my_strcat(const char *const str1, const char * const str2); // Function Prototype
+
+int main(){ // Main Function to test the function
+    printf("%s\n", my_strcat("Khaled ", "Hassan"));
+    return 0;
+}
+
+char *my_strcat(const char* const str1, const char* const str2){ // Function Definition
+    int newlen = strlen(str1) + strlen(str2) + 1; // defining a variable for the length of the new string by adding the lengths of the two strings
+    char *newstr = malloc(newlen);                // and allocating a memory space of that size, including 1 extra space for the null operator needed
+                                                  // at the end of each string
+    int i = 0;
+    int j = 0;
+    for(i; i < strlen(str1); i++){ // This for loop adds each character element in str1 to the memory location at (newtsr + i) as long as i, the counter
+        *(newstr + i) = str1[i];   // , is lower than the length of str1
+    }
+    for(j; j < strlen(str2); j++){ // This for loop adds each character of str2 to the memory location at (newstr + i)
+        *(newstr + i) = str2[j];
+        i++; // i is still incremented to go to the next memory location, not start over
+    }
+    *(newstr + newlen - 1) = '\0'; // adds the null operator at the very end of the new string
+
+    return newstr; // return newstr, which is a pointer to the memory location of the new string, or the sum of the two strings
+}

@@ -1,0 +1,164 @@
+package Question.One;
+import java.util.Arrays;
+
+public class UpperTriangularMatrix{
+    private int matSize; // matSize = n in an n x n matrix
+    private int[] matrixData;  // defines a 1D efficient matrix
+
+    public UpperTriangularMatrix(int n){ // constructor 1, creates an array and initializes values to zero
+        if (n <= 0){ // if the dimension given is wrong (<=0), it's automatically set to 1
+            n = 1;
+        }
+        matSize = n;
+        matrixData = new int[((matSize*(matSize+1))/2)]; // given formula to find the size of the efficient matrix
+        for(int i = 0; i < n; i++){
+            matrixData[i] = 0; // initialized to zero
+        }
+
+    }
+
+    public UpperTriangularMatrix(Matrix upTriM) throws IllegalArgumentException{ // constructor 2
+        if (upTriM.isUpperTr() == false){ // calls the isUpperTr() method from the Matrix class to check if the input matrix is indeed upper triangular & raises an
+            throw new IllegalArgumentException("Not An Upper Triangular Matrix."); // error if it is not
+        }
+        else{ // if the input matrix is upper triangular,
+            int counter = 0;
+            matSize = upTriM.nuRows();
+            matrixData = new int[((matSize*(matSize+1))/2)]; // initializes the efficient matrix to the correct size
+
+            for (int i = 0; i < matSize; i++){
+                for(int j = i; j < upTriM.nuCols(); j++){
+                    matrixData[counter] = upTriM.getElement(i, j); // sets the value of respective element in the efficient matrix to the correct value from the
+                    counter++;                                     // Upper Triangular Matrix
+                }
+            }
+        }
+    }
+
+    public int getDim(){ // returns dimension of the matrix
+        return this.matSize;
+    }
+
+    public int getElement(int i, int j) throws IndexOutOfBoundsException{
+
+        Matrix tempMat = fullMatrix(); // calls the fullMatrix() method, defined later, to "reconstruct" a 2D upper trianular matrix
+                                        // from the 1D efficient matrix
+
+        if  ( (i < matSize && i >= 0) && (j < matSize && j >= 0)) { // if the input parameters, or the location of the desired element, is correct
+            return tempMat.getElement(i,j);                         // then it is returned by calling the getElement() method from the Matrix class
+        }
+        else { // if the indices are incorrect, an exception is raised
+            throw new IndexOutOfBoundsException("Invalid indexes.");
+        }
+    }
+
+    public void setElement(int x, int i, int j) throws IndexOutOfBoundsException, IllegalArgumentException{
+        if (j < i){ // if the column index is less than the row index, then we're trying to change values below the diagonal, which is wrong => an exception is thrown
+            throw new IllegalArgumentException ("Incorrect argument");
+        }
+        else if ((i > matSize || i < 0) || (j > matSize || j < 0)){ // if the indices are incorrect (negative or greater than the matrix dimensions), an error is thrown
+            throw new IndexOutOfBoundsException ("Invalid Indexes");
+        }
+        else{
+            Matrix tempMat = fullMatrix(); // calls fullMatrix() to create a temporary 2D matrix from our efficient matrix
+            tempMat.setElement(x,i,j); // calls setElement() from the Matrix class
+
+            int count = 0;  // same assignment block as in the constructor is used to set values in the efficient matrix
+            for(int p = 0; p < matSize; p++){
+                for(int q = p; q < matSize; q++){
+                    matrixData[count] = tempMat.getElement(p,q);
+                    count++;
+                }
+            }
+
+        }
+    }
+
+    public void setElement(int x, int i) throws IndexOutOfBoundsException{ // alternative method that does the same thing, but with just one index given
+        if (i >= matrixData.length){ // if the index entered is not in the efficient matrix, an exception is thrown
+            throw new IllegalArgumentException ("Illegal argument");
+        } else{ // otherwise, if it's correct, the value x is assigned to the indicated location.
+            matrixData[i] = x;
+        }
+    }
+
+    public Matrix fullMatrix(){
+    /*
+    - it sets the elements of the fullMatrix using setElement() by sequentially going through the upper triangle of the 2D matrix
+    and assigning the corresponding elements from our 1D efficient matrix
+    */
+        Matrix fullMat = new Matrix(matSize, matSize); // declares a new n x n 2D matrix
+
+        int counter = 0;
+        for (int i = 0; i < matSize; i++){
+            for (int j = i; j < matSize; j++){
+                fullMat.setElement(matrixData[counter],i,j); // calls setElement() to assign values from the efficient array to the corresponding position in the reconstructed matrix
+                counter++;
+            }
+        }
+        return fullMat; // returns the reconstructed 2D matrix
+    }
+
+    public void print1DArray(){
+        String output = new String(); // creates a string used to print the efficient array elements
+        for (int i = 0; i < matrixData.length; i++){
+            output += matrixData[i] + "  "; // prints elements of the efficient array with two spaces between each element
+        }
+        System.out.println(output);
+    }
+
+    public String toString(){
+        Matrix tempMat = fullMatrix(); // calls fullMatrix() to reconstruct the matrix
+
+        String output = new String(); // creates an empty string called output
+        for(int i = 0; i < matSize; i++){
+            for(int j = 0; j < matSize; j++){
+                System.out.print(tempMat.getElement(i,j));
+                output += tempMat.getElement(i,j) + "  ";
+            } // formatting of the output string
+            output += "\n";
+        }
+        return output; // returning the string
+    }
+    public int getDet(){
+        Matrix tempMat = fullMatrix(); // calls fullMatrix()
+        int det = 1;
+        for (int i = 0; i < matSize; i++){
+            det *= tempMat.getElement(i,i); // determinant is the product of the main diagonal values.
+        }
+        return det;
+    }
+
+    public double[] effSolve(double[] b) throws IllegalArgumentException{
+        /* performs back substitution to solve a system of linear equations by "making" it in the form Ax = B, then solving the lowest equality, then subbing that
+           into the upper one and so on (It's clearer to explain this example by hand). Since the array the problem is derived from is always Upper Triangle,
+           it's in row-echelon form, so this method will work
+        */
+
+        if (getDet() == 0){ // back substitution only works if all the diagonal elements are non-zero
+            throw new IllegalArgumentException ("The determinant of A is zero.");
+        }
+        else if(b.length != matSize){ // indicates that the argument 1D array is not corresponding to n if the array is n x n
+            throw new IllegalArgumentException ("Incorrect dimension of b.");
+        }
+        else { // if no exceptions yet,
+            double[] solution = new double[matSize]; // declaring a new array, type double and size n (n x n matrix) to store the solutions for the variables
+            double tempSum;
+            int diagonal = matrixData.length - 1;
+            int counter = 2;
+            for(int i = matSize-1; i >= 0; i--){
+                tempSum = 0.0;
+                for(int j = matSize-1; j > i; j--){
+                    int element = (matSize * i) + j - ((i * (i+1))/2);
+                    tempSum += matrixData[element] * solution[j];
+                }
+
+                solution[i] = (b[i]-tempSum)/matrixData[diagonal];
+                diagonal -= counter;
+                counter++;
+            }
+            return solution; // returns the solution array
+        }
+    }
+
+}

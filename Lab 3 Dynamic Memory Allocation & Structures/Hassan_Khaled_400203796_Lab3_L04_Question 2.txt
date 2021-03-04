@@ -1,0 +1,140 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// defining the structure and its elements
+typedef struct{
+    int id, proj1, proj2;
+    char fName[15], lName[15];
+    float fMark
+}student;
+
+
+student ** create_class_list(char *filename, int *sizePtr ) //Function to create and return array of pointers containing pointers to the structure variables{
+  FILE *inFile=fopen(filename, "r");
+  fscanf(inFile,"%d",sizePtr); // Scans the first integer in the txt file and assigns its value to the variable sizePtr points to
+  student **studList=calloc(*sizePtr, sizeof(student*)); // allocates memory space for as many elements as there are in the variable sizePtr points to
+  int i=0;
+  for(i;i<*sizePtr;i++){
+    studList[i]=(student*)calloc(1,sizeof(student)); //Allocates memory of 1 block with size of student to store student data. All structure members are initialized to zero.
+    fscanf(inFile,"%d %s %s",&studList[i]->id,studList[i]->fName,&studList[i]->lName); //Assigns idNum, first and last name
+
+  }
+  fclose(inFile);
+  return studList;
+
+}
+int find(int idNo, student **list, int size){
+    // returns the index of the given id number in the student pointer array. Returns -1 if not found
+    if (size == 0){
+        return -1;
+    }
+    else{
+        for(int i=0; i<size; i++){
+            if (list[i]->id == idNo){
+                return i;
+            }
+        }
+        return -1;
+    }
+}
+
+void input_grades(char *filename, student **list, int size){
+    FILE *inFile = fopen(filename, "r"); // opens file to read
+
+    int j,idNo, loc;
+    for(int i = 0; i < size; i++){
+        fscanf(inFile,"%d",&idNo);
+        loc = find(idNo,list,size); // location index of the ID number, used to determine which member to add the grade to
+        fscanf(inFile,"%d %d",&(list[loc]->proj1),&(list[loc]->proj2)); // assigns project grades to respective elements of the structure member at that index
+    }
+}
+
+
+void compute_final_course_grades(student **list,int size){
+    for(int i = 0; i < size; i++){ // computes the average of the project grades, or the final mark and allocates that value to the final grade element of each
+        list[i]->fMark = (list[i]->proj1 + list[i]->proj2)/2.0; // member of the structure
+    }
+}
+
+void output_final_course_grades(char *filename, student **list, int size){
+    FILE *outFile = fopen(filename,"w");
+    fprintf(outFile,"%d\n",size); // assigns the first integer to the size variable
+    for(int i = 0;i < size; i++){
+        fprintf(outFile,"%d %f\n",list[i]->id,list[i]->fMark); // writes in the text file the id of the each student and their final grade
+    }                                                          //  based on their project grades
+}
+
+void print_list(student **list, int size){ // prints all the info of each student
+    for(int i = 0; i < size; i++){
+        printf("ID = %d name: %s %s project 1 grade: %d project 2 grade: %d final grade: %f\n",list[i]->id,list[i]->fName,list[i]->lName,list[i]->proj1,list[i]->proj2,list[i]->fMark);
+    }
+}
+
+void withdraw(int idNo, student **list, int *sizePtr){
+  int pos = find(idNo,list,*sizePtr); // calls the find function to determine the ID's location
+
+  if(pos == -1){ // Case 1: if it's not on the list, an error message is output
+    printf("The ID number entered is not in the list of students\n");
+  }
+  else if(pos == (*sizePtr -1)){ // Case 2: if it's the last on the list, the program deallocates the last memory location and decrements the list size
+    free(list[pos]);
+    (*sizePtr)--;
+  }
+  else{ // Case 3: the ID is not the last, the program deallocates the memory for that name, and shifts the remaining elements below it up one index. Finally, the
+    free(list[pos]); // size variable is decremented
+    for(int i = pos; i < (*sizePtr-1); i++){
+      list[i] = list[i+1];
+    }
+    (*sizePtr)--;
+    }
+
+}
+
+void destroy_list(student **list, int *sizePtr){ // This function first goes through each index in the pointer array, deallocating each memory location (for each
+    for(int i = 0; i < (*sizePtr); i++){         // structure member), then changes the size pointer variable to zero before deallocating the memory reserved for
+        free(list[i]);                           // the pointer array
+    }
+    *sizePtr = 0;
+    free(list);
+}
+
+// main function to test the program
+int main(){
+  int size,b,i=0;
+
+  student **list = create_class_list("list.txt",&size);
+  for(i ; i <size; i++){
+    printf("%d %s %s\n",list[i]->id,list[i]->fName,list[i]->lName);
+  }
+
+  printf("\n%d \n" ,find(-5,list,size));
+
+  input_grades("grades.txt",list,size);
+  for(i = 0;i<size;i++){
+    printf("%d %d %d\n",list[i]->id,list[i]->proj1,list[i]->proj2);
+  }
+
+  printf("\n");
+
+  compute_final_course_grades(list,size);
+  for(i = 0;i<size;i++){
+    printf("%d %f\n",list[i]->id,list[i]->fMark);
+  }
+
+  printf("\n");
+
+  output_final_course_grades("output.txt",list,size);
+  print_list(list,size);
+
+  printf("\n");
+
+  withdraw(0,list,&size);
+  print_list(list,size);
+
+  printf("\n");
+
+  destroy_list(list,&size);
+  print_list(list,size);
+
+  return 0;
+}

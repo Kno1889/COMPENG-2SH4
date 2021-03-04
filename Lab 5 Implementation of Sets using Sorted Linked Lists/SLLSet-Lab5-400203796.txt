@@ -1,0 +1,183 @@
+package Lab.Five;
+
+public class SLLSet{
+    private int size; // size of set
+    private SLLNode head; //reference to the first element of the sorted set
+
+    public SLLSet(){
+    // Constructor 1, with no input parameters. Initializes an empty set with size 0 and reference to first referencing null
+        size = 0;
+        head = null;
+    }
+
+    public SLLSet( int[] sortedArray) {
+        // Constructor 2 (overloaded constructor), with a sorted array as the input parameter
+        if (sortedArray.length > 0) { // if the input sorted array is valid (length > 0)
+            size = sortedArray.length; // size is the length of the input array
+            SLLNode h = new SLLNode(sortedArray[0], null); // creates a new SLLNode object h with the first value in the sorted array.
+            head = h;
+            int i = 1;
+            while (i < sortedArray.length) { // assigns the values of the rest of the sorted array elements to their respective newly created SLLNode objects
+                h.next = new SLLNode(sortedArray[i], null);
+                h = h.next;
+                i++;
+            }
+        }
+        else{ // if the sorted array is invalid (length <= 0)
+            size = 0;
+            head = null;
+        }
+    }
+
+    public int getSize(){ // returns the size of the this SLLSet. This getter is needed since size is private
+        return this.size;
+    }
+
+    public SLLSet copy(){ // creates and returns a deep copy of the SLLSet object
+        int i = 0;
+        int[] valList = new int[this.size]; //creates list of size equal to the size of the SLLSet object
+        SLLNode h = head; // h points to head of set, or the first element
+        while(h != null){
+            // iterates through SLLSet objects and assigns only the values in their respective positions in the values list corresponding to SLLSet
+            // so we know that the elements are sorted
+            valList[i] = h.value;
+            h = h.next;
+            i++;
+        }
+        SLLSet dCopy = new SLLSet(valList); // calls on the constructor to create a new SLLSet object using the list from above
+        dCopy.size = this.size; // sets the size of the deep copy equal to the size of the original set
+        return dCopy;
+    }
+
+    public boolean isIn(int v) { // iterates through the values and compares them to v
+        SLLNode h = head; // assigns the first element to h
+        while (h != null) {
+            if (h.value == v) { //
+                return true; //returns true if v is found
+            }
+            h = h.next; // moves on to the next element to check its value
+        }
+        return false; //if v is not found this line executes and returns false
+    }
+
+    public void add(int v) {
+        SLLNode h = head;
+        if(this.isIn(v) == false){ // only runs if the value is not already in the set
+            if(head == null){ // Case 1: empty set => adds it directly as the first element
+                head = new SLLNode(v,null);
+            }
+            else if(head.value > v){ // Case 2: if v is less than the current value,
+                head = new SLLNode(v,head); // a new node is created before the existing one (the "next" of this one is head => this is before head, the current element)
+            }
+            else{ // Case 3: if v is greater than the value
+                int x;
+                while(h.next != null){ // while the next is not nothing
+                    x = h.next.value;
+                    if(v < x && v > h.value){ // if v is smaller than the next AND bigger than the current value
+                        h.next = new SLLNode(v,h.next); // v is added between them
+                    }
+                    h = h.next;
+                }
+                if(v > h.value){ // if its only bigger than the current value
+                    h.next = new SLLNode(v,null); // it's added after the current element, and the next one after that is null
+                }
+            }
+            size++; // size is increased to indicate a new element being added
+        }
+    }
+
+    public void remove(int v){
+        SLLNode h = head;
+        if(isIn(v) == true){ // only runs if v is in the SLLSet
+            size--; // decrements the size to indicate a removed element
+            if(h.value == v){ // if the current value is equal to v
+                this.head = h.next; // this element is removed (the "pointer" to it "skips" it by referencing the one after it)
+            }
+            else{ // if the current value is not equal to v
+                while(h != null){ // this segment only runs while this element is not the last
+                    if(h.next == null){
+                        break;
+                    }
+                    else if(h.next.value == v){ // if the next value is v, the next is removed
+                        h.next = h.next.next;
+                        break;
+                    }
+                    h = h.next; // iterates to the next elements
+                }
+            }
+        }
+    }
+
+    public SLLSet union(SLLSet s) { // combines both sets, this and s
+        SLLNode h = s.head;
+        SLLSet uniSet = this.copy(); // makes a deep copy of this set
+        if(s.head != null){
+            while(h != null){
+                uniSet.add(h.value); // adds the current value to the union set
+                h = h.next; // and moves on to the next element in s
+            }
+        }
+        return uniSet;
+    }
+
+    public static SLLSet union(SLLSet[] sArray){
+        // overloading the method to accommodate for different input parameters
+        SLLSet uni = new SLLSet();
+        for(int i = 0; i < sArray.length; i++){
+            uni  = uni.union(sArray[i]); // adds the corresponding value of the SLLSet object from the array into the uni set
+        }
+        return uni;
+    }
+
+    public SLLSet intersection(SLLSet s){ // compares all the elements in the input parameter set to the current element in this set.
+        SLLNode h = this.head;
+        SLLNode h2 = s.head;
+        SLLSet inter = new SLLSet();
+        if(  h != null || h2 != null){
+            while(h != null){
+                h2 = s.head;
+                while(h2 != null){
+                    if(h2.value == h.value){
+                        inter.add(h.value); // an element is only added to the inter set if its equal in both
+                    }
+                    h2 = h2.next; // moves on to the next in the input set
+                }
+                h = h.next; // moves on to the next one in this set
+            }
+        }
+        return inter;
+    }
+
+    public SLLSet difference(SLLSet s){
+        SLLSet diff = new SLLSet();
+        SLLNode h = this.head;
+
+        while(h != null){ // adds all the values of the elements of this set to the diff set
+            diff.add(h.value);
+            h = h.next;
+        }
+
+        SLLNode h2 = s.head;
+        while(h2 != null){ // then iterates through the second set and removes the elements that appear in both (s and diff)
+            diff.remove(h2.value);
+            h2 = h2.next;
+        }
+        return diff;
+    }
+
+    public String toString(){ //returns string of values in increasing order
+        String outStr;
+        SLLNode h = this.head;
+        outStr = "[";
+
+        while(h != null){
+            outStr += h.value;
+            h = h.next;
+            if(h != null){
+                outStr = outStr+ ",";
+            }
+        }
+        outStr += "]";
+        return outStr;
+    }
+}
